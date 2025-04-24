@@ -5,24 +5,14 @@ Flutter: 1.20.0+
 
 Android: 21+
 
-iOS: 11+
-
-## Dependency
-Add this to your package's pubspec.yaml file:
-```dart
-dependencies:
-  zowie_flutter_sdk: 0.0.1+4
-```
+iOS: 13+
 
 ## Installation
 From command line:
-pub:
-```dart
-pub get
-```
+
 Flutter:
 ```dart
-flutter pub get
+$ flutter pub add zowie_flutter_sdk
 ```
 
 Alternatively, get flutter packages from your editor
@@ -31,11 +21,12 @@ Alternatively, get flutter packages from your editor
 ```dart
 import 'package:zowie_flutter_sdk/zowie.dart';
 import 'package:zowie_flutter_sdk/zowie_color.dart';
+import 'package:zowie_flutter_sdk/zowie_jwt.dart';
 ```
 
 ## iOS Podfile
 Edit Podfile at the end, set BUILD_LIBRARY_FOR_DISTRIBUTION as 'YES' for every configuration, as below:
-```
+```dart
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     # Zowie SDK
@@ -60,15 +51,14 @@ To be able to use Zowie SDK first of all you have to provide the configuration:
 
 ```dart
 Zowie.configuration(
-  userId: "REQUIRED_STRING",
-  conversationId: "REQUIRED_STRING",
   instanceId: "REQUIRED_STRING",
   conversationInitReferral: "OPTIONAL_STRING",
-  jwt: "OPTIONAL_STRING",
+  chatHost: "REQUIRED_STRING",
+  jwt: "OPTIONAL_OBJECT",
 );
 ```
 
-if `jwt` property is not declared or empty, SDK will use <b>raw</b> authentication
+if `jwt` property is not declared SDK will use **anonymous** authentication
 
 ### Show chat
 ```dart
@@ -155,10 +145,13 @@ If you want to disable notifications:
 Zowie.disableNotifications();
 ```
 
-### Set user status
+### Set layout configuration
 To set user's status:
 ```dart
-Zowie.setUserStatus(REQUIRED_BOOL);
+Zowie.setLayoutConfiguration(
+    showConsultantAvatar: "OPTIONAL_BOOL",
+    mode: "ZowieConsultantNameMode ENUM"
+);
 ```
 
 ### Set context
@@ -167,12 +160,50 @@ You can feed backend with the `contextId`:
 Zowie.setContext("REQUIRED_STRING");
 ```
 
+### Clear anonymous session
+You can clear anonymous session with the `instanceId`:
+```dart
+Zowie.clearAnonymousSession("REQUIRED_STRING");
+```
+
+### Initialize error listener
+If you want to handle the chat initialization error, use:
+```dart
+Zowie.setInitializationErrorListener();
+```
+
+### Setting Referral value
+You can use setReferral method before or after chat widow is visible.
+
+Setting referral before opening chat window will result in Waiting status being emitted by the status listener. This call will wait for chat window to be initialized, and then referral will be sent. If there is no messages in the conversation referral value will be used instead of conversationInitReferral set in ZowieConfiguration.
+
+Setting referral when chat window is already visible and initialized will send a referral value immediately.
+
+```dart
+// set referral example
+void setReferral(String referral) {
+  Zowie.setReferral(referral: "referral").listen(
+        (event) {
+      if (event.isSuccess) {
+        print("Referral Success!");
+      } else if (event.isWaiting) {
+        print("Referral Still waiting...");
+      }
+    },
+    onError: (error) {
+      print('Referral Error: ${error.error}');
+    },
+  );
+}
+```
+
 ### Localizations
 The only supported language in this SDK is `english`. If you need more localization please provide it as below:
 ```dart
 Zowie.localization(
   newMessageHint: "OPTIONAL_STRING",
   messageStatusDelivered: "OPTIONAL_STRING",
+  messageStatusRead: "OPTIONAL_STRING",
   messageStatusSendingErrorMessage: "OPTIONAL_STRING",
   messageStatusSendingErrorTryAgain: "OPTIONAL_STRING",
   readAndWriteStoragePermissionAlertTitle: "OPTIONAL_STRING",
@@ -195,19 +226,21 @@ Zowie.localization(
 Feel free to set up color branding however you like:
 ```dart 
 Zowie.colors(
-    messageStatusSendingErrorColor:: OPTIONAL_COLOR,
+    messageStatusSendingErrorColor: OPTIONAL_COLOR,
     messageStatusDeliveredColor: OPTIONAL_COLOR,
-    sentMessageBackgroundColor: OPTIONAL_ZOWIE_COLOR,
+    messageStatusReadColor: OPTIONAL_COLOR,
+    messageAuthorNameTextColor: OPTIONAL_COLOR,
+    sentMessageBackgroundColor: OPTIONAL_COLOR,
     sentMessageContentsColor: OPTIONAL_COLOR,
     sentMessageImageUploadLoadingColor: OPTIONAL_COLOR,
     sentMessageVideoUploadLoadingColor: OPTIONAL_COLOR,
     sentMessageImagePlaceholderLoadingColor: OPTIONAL_COLOR,
     sentMessageImagePlaceholderBackgroundColor: OPTIONAL_COLOR,
     sentMessageLinksColor: OPTIONAL_COLOR,
-    incomingMessageBackgroundColor: OPTIONAL_ZOWIE_COLOR,
+    incomingMessageBackgroundColor: OPTIONAL_COLOR,
     incomingMessagePrimaryTextColor: OPTIONAL_COLOR,
     incomingMessageSecondaryTextColor: OPTIONAL_COLOR,
-    incomingMessageFileIconColor: OPTIONAL_ZOWIE_COLOR,
+    incomingMessageFileIconColor: OPTIONAL_COLOR,
     incomingMessageFileDownloadSuccessIconColor: OPTIONAL_COLOR,
     incomingMessageDownloadFileIconColor: OPTIONAL_COLOR,
     incomingMessageDownloadFileLoadingColor: OPTIONAL_COLOR,
@@ -218,12 +251,14 @@ Zowie.colors(
     newMessageTextColor: OPTIONAL_COLOR,
     newMessageHintTextColor: OPTIONAL_COLOR,
     sendAttachmentButtonColor: OPTIONAL_COLOR,
-    sendTextButtonColor: OPTIONAL_ZOWIE_COLOR,
+    sendTextButtonColor: OPTIONAL_COLOR,
     separatorColor: OPTIONAL_COLOR,
     chatMessagesLoadingColor: OPTIONAL_COLOR,
     quickButtonBackgroundColor: OPTIONAL_COLOR,
+    quickButtonBackgroundPressedColor: OPTIONAL_COLOR,
     quickButtonTextColor: OPTIONAL_COLOR,
     quickButtonPressedStrokeColor: OPTIONAL_COLOR,
+    quickButtonStrokeColor: OPTIONAL_COLOR,
     actionButtonBackgroundColor: OPTIONAL_COLOR,
     actionButtonBackgroundPressedColor: OPTIONAL_COLOR,
     actionButtonTextColor: OPTIONAL_COLOR,
@@ -238,5 +273,12 @@ Zowie.colors(
     playVideoButtonBackgroundPressedColor: OPTIONAL_COLOR,
     playVideoButtonPlayIconColor: OPTIONAL_COLOR,
     actionButtonShadow: OPTIONAL_COLOR,
+    typingAnimationTintColor: OPTIONAL_COLOR,
+    announcementBackgroundColor: OPTIONAL_COLOR,
+    announcementStrokeColor: OPTIONAL_COLOR,
+    announcementTextColor: OPTIONAL_COLOR,
+    announcementIconColor: OPTIONAL_COLOR,
+    sectionDateTimeTextColor: OPTIONAL_COLOR,
+    messageDateTimeTextColor: OPTIONAL_COLOR,
 );
 ```
